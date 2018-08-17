@@ -20,6 +20,7 @@ load(
     "def_file_filter_configure",
 )
 load("//third_party/flatbuffers:workspace.bzl", flatbuffers = "repo")
+load("//third_party/tc:tools.bzl", "conda_local_repository")
 
 def initialize_third_party():
     flatbuffers()
@@ -818,6 +819,107 @@ def tf_workspace(path_prefix = "", tf_repo_name = ""):
         ],
         strip_prefix = "rules_android-0.1.1",
     )
+
+    # Tensor Comprehensions and its dependencies
+    conda_local_repository(
+        name = "conda_aten",
+        path = "lib/python3.6/site-packages/torch/lib",
+        build_file_content = """
+cc_library(
+    name = "aten_headers",
+    srcs = ["libATen.so"],
+    hdrs = glob(["include/ATen/*.h"]),
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"]
+)
+    """
+    )
+
+    conda_local_repository(
+        name = "conda_llvm",
+        path = "",
+        build_file_content = """
+cc_library(
+    name = "conda_llvm_lib",
+    srcs = ["lib/libLLVM.so"],
+    hdrs = glob(["include/llvm/**",
+                 "include/llvm-c/**"]),
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"]
+)
+    """
+    )
+
+    conda_local_repository(
+        name = "conda_clang",
+        path = "",
+        build_file_content = """
+cc_library(
+    name = "conda_clang_lib",
+    srcs = ["lib/libclang.so"],
+    hdrs = glob(["include/clang/**"]),
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"]
+)
+  """
+    )
+
+    conda_local_repository(
+        name = "conda_halide",
+        path = "",
+        build_file_content = """
+cc_library(
+    name = "conda_halide_lib",
+    srcs = ["lib/libHalide.so"],
+    hdrs = glob(["include/Halide/*.h"]),
+    strip_include_prefix = "include/Halide",
+    visibility = ["//visibility:public"]
+)
+    """
+    )
+
+    tf_http_archive(
+        name = "com_github_dmlc_dlpack",
+        sha256 = "3eea677a58af6c3c67747c2d63bfb17d21f12e5059df6b37c73bb55cd87f3964",
+        urls = [
+            "https://mirror.bazel.build/github.com/dmlc/dlpack/archive/10892ac964f1af7c81aae145cd3fab78bbccd297.zip",
+            "https://github.com/dmlc/dlpack/archive/10892ac964f1af7c81aae145cd3fab78bbccd297.zip",
+        ],
+        build_file = clean_dep("//third_party/tc:dlpack.BUILD"),
+        strip_prefix = "dlpack-10892ac964f1af7c81aae145cd3fab78bbccd297",
+    )
+
+    tf_http_archive(
+        name = "com_github_nicolasvasilache_isl",
+        sha256 = "1f8c666ad59ed9ff81a4cdf70e10bdf6716bc7d18e2f237c0e483bb9410bb533",
+        urls = [
+            "https://mirror.bazel.build/github.com/nicolasvasilache/isl/archive/96fef8767ee8823d0316e040c827c78b28802ce9.zip",
+            "https://github.com/nicolasvasilache/isl/archive/96fef8767ee8823d0316e040c827c78b28802ce9.zip",
+        ],
+        build_file = clean_dep("//third_party/tc:isl.BUILD"),
+        strip_prefix = "isl-96fef8767ee8823d0316e040c827c78b28802ce9",
+    )
+  
+    tf_http_archive(
+        name = "com_github_google_glog",
+        sha256 = "366f144d6954141b6d5c8de4a5bddb4faa6b5388cd7f9d0693b1c9ad6b2d6f71",
+        urls = [
+            "https://mirror.bazel.build/github.com/google/glog/archive/e6e2e1372aeb3f6ac6ca5f4a3d72bad8dce3c724.zip",
+            "https://github.com/google/glog/archive/e6e2e1372aeb3f6ac6ca5f4a3d72bad8dce3c724.zip",
+        ],
+        strip_prefix = "glog-e6e2e1372aeb3f6ac6ca5f4a3d72bad8dce3c724",
+    )
+  
+    tf_http_archive(
+        name = "tensor_comprehensions",
+        sha256 = "a4242828c64858a97ead74b03d526de44cbf397cc6b236a9413f8f62b7b2589e",
+        urls = [
+            "https://mirror.bazel.build/github.com/ftynse/TensorComprehensions/archive/8f061269e0a86be6d8f99a5d609f15178697a6be.zip",
+            "https://github.com/ftynse/TensorComprehensions/archive/8f061269e0a86be6d8f99a5d609f15178697a6be.zip",
+        ],
+        strip_prefix = "TensorComprehensions-8f061269e0a86be6d8f99a5d609f15178697a6be",
+    )
+
 
     ##############################################################################
     # BIND DEFINITIONS
